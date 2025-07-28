@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Secure File Vault</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #708A58, #2D4F2B);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dashboard-card {
+      background: #FFF1CA;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+      animation: zoomFadeIn 0.6s ease-out;
+    }
+
+    .dashboard-card h1 {
+      color: #2D4F2B;
+      margin-bottom: 20px;
+    }
+
+    .dashboard-card p {
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    .btn-custom {
+      background-color: #FFB823;
+      color: #2D4F2B;
+      border: none;
+    }
+
+    .btn-custom:hover {
+      background-color: #e0a41f;
+    }
+
+    @keyframes zoomFadeIn {
+      0% {
+        transform: scale(1.3);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes zoomFadeOut {
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+    }
+
+    .zoom-out {
+      animation: zoomFadeOut 0.5s forwards;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2D4F2B;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.5s ease;
+      z-index: 9999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  </style>
+</head>
+<body id="dashboardBody">
+  <div class="dashboard-card" id="dashboardCard">
+    <h1>Welcome to Secure File Vault</h1>
+    <p>You are now logged in with Multi-Factor Authentication.</p>
+    <button class="btn btn-custom" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showToast(message, isError = false, delay = 0) {
+      const toast = document.getElementById("toast");
+      setTimeout(() => {
+        toast.textContent = message;
+        toast.style.background = isError ? "#e74c3c" : "#2D4F2B";
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3000);
+      }, delay);
+    }
+
+    function logout() {
+      document.getElementById("dashboardCard").classList.add("zoom-out");
+      showToast("Logging out...", false, 500);
+      setTimeout(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        window.location.href = "auth.html";
+      }, 1000);
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showToast("Session expired", true);
+        setTimeout(() => window.location.href = "auth.html", 1500);
+        return;
+      }
+
+      const res = await fetch("http://127.0.0.1:8000/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        showToast("Invalid or expired session", true);
+        setTimeout(() => window.location.href = "auth.html", 1500);
+      }
+    });
+  </script>
+</body>
+</html>
